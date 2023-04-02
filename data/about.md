@@ -1,0 +1,1 @@
+With camelid-porch you can load data into an Alpaca or Llama large language model using llama-index and langchain. For example, you can load a directory of text files, or a file of urls.  Commands are available to save or prompt afterwards. Because llama-index supports creating a custom LLM, no API keys are required.
