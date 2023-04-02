@@ -1,18 +1,29 @@
 import subprocess
-from llama_index import PromptHelper, SimpleDirectoryReader
-from llama_index import LLMPredictor, ServiceContext
+from llama_index import LLMPredictor, ServiceContext, PromptHelper, SimpleDirectoryReader, SimpleWebPageReader, \
+    GPTListIndex
 from pathlib import Path
+import asyncio
+from typing import List, Optional, Mapping, Any
+from langchain.llms.base import Generation, LLMResult, BaseLLM
+from pydantic import BaseModel
+import threading
+import argparse
 
 # define prompt helper
 # set maximum input size
-max_input_size = 2048
+max_input_size = 4096
 # set number of output tokens
 num_output = 256
 # set maximum chunk overlap
 max_chunk_overlap = 20
 prompt_helper = PromptHelper(max_input_size, num_output, max_chunk_overlap)
 
-from llama_index import GPTListIndex, SimpleWebPageReader
+size = 7
+modelName = f"{size}B/ggml-model-q4_0.bin".format(size)
+camelid = "alpaca"
+home = Path.home()
+model = f"{home}/dalai/{camelid}/models/{modelName}".format(home, camelid, modelName)
+modelExecutePath = f"{home}/dalai/{camelid}/main".format(home, camelid)
 
 
 def remove_matching_end(a, b):
@@ -23,14 +34,6 @@ def remove_matching_end(a, b):
             return b[i:]
 
     return b
-
-## todo make these args?
-size = 30
-modelName = f"{size}B/ggml-model-q4_0.bin".format(size)
-camelid = "llama"
-home = Path.home()
-model = f"{home}/dalai/{camelid}/models/{modelName}".format(home, camelid, modelName)
-modelExecutePath = f"{home}/dalai/{camelid}/main".format(home, camelid)
 
 
 async def load_model(
@@ -91,14 +94,7 @@ async def load_model(
             yield remove_matching_end(prompt, chunk)
 
 
-import asyncio
-from typing import List, Optional, Mapping, Any
-from langchain.llms.base import Generation, LLMResult, BaseLLM
-from pydantic import BaseModel
-import threading
-
-
-class Llama(BaseLLM, BaseModel):
+class Camelid(BaseLLM, BaseModel):
     async def _agenerate(
         self, prompts: List[str], stop: Optional[List[str]] = None
     ) -> LLMResult:
@@ -144,18 +140,36 @@ class Llama(BaseLLM, BaseModel):
 
 
 if __name__ == "__main__":
-    llm_predictor = LLMPredictor(llm=Llama())
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--save', type=str, required=False)
+    parser.add_argument('--prompt', type=str, required=False)
+    parser.add_argument('--path', type=str, required=False)
+    parser.add_argument('--url', type=str, required=False)
+    args = parser.parse_args()
 
+    # Custom llm_predictor from https://gist.github.com/lukestanley/6517823485f88a40a09979c1a19561ce_
+    llm_predictor = LLMPredictor(llm=Camelid())
 
     service_context = ServiceContext.from_defaults(llm_predictor=llm_predictor, prompt_helper=prompt_helper)
 
-    # Load the your data
-    #documents = SimpleWebPageReader(html_to_text=True).load_data(["https://github.com/jerryjliu/llama_index"])
-    documents = SimpleDirectoryReader('./data').load_data()
-    # documents = SimpleJsonReader()
+    # Load data from list of urls
+    if args.url:
+        with open(args.url, "r") as urls:
+            lines = urls.readlines()
+            documents = SimpleWebPageReader(html_to_text=True).load_data(lines)
+            index = GPTListIndex.from_documents(documents, service_context=service_context)
 
-    index = GPTListIndex.from_documents(documents, service_context=service_context)
+    # Load data from path
+    if args.path:
+        documents = SimpleDirectoryReader(args.path).load_data()
+        index = GPTListIndex.from_documents(documents, service_context=service_context)
 
     # Query and print response
-    response = index.query("")
-    print(response)
+    if args.prompt:
+        response = index.query(args.prompt)
+        print(response)
+
+    # Save to index
+    if args.save:
+        index.save_to_disk(args.save)
+
