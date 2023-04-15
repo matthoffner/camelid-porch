@@ -1,6 +1,8 @@
-langchain==0.0.128
 transformers~=4.27.4
 llama-index
 asyncio
 html2text
 pydantic
+langchain
+faiss-cpu
+llama-cpp-python
