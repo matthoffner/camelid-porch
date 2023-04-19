@@ -9,10 +9,8 @@ Python scripts for using custom LLMs with Langchain Alpaca or Llama model using 
 ### Install models from [Dalai](https://github.com/cocktailpeanut/dalai):
 
 ```
-npx dalai llama install 7B
+npx dalai alpaca install 7B
 ```
-  
-#### Set model size in script (optional)
 
 ### Install requirements:
 
@@ -60,7 +58,14 @@ python main.py --save index.json
 From https://github.com/ai8hyf/babyagi/commit/6fcd528a92c80846dbb351f2b7babdd50c38709d
 
 ```
-python babyagi.py --prompt "Plan me a 1 week trip to Hawaii"
+python babyagi.py --prompt "Create a coffee blog"
+```
+
+### Configure path
+
+```
+--model-main-path
+--model-path
 ```
 
 ## Related links

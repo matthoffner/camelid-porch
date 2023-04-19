@@ -18,13 +18,23 @@ num_output = 256
 max_chunk_overlap = 20
 prompt_helper = PromptHelper(max_input_size, num_output, max_chunk_overlap)
 
-size = 7
-modelName = f"{size}B/ggml-model-q4_0.bin".format(size)
-camelid = "alpaca"
 home = Path.home()
-model = f"{home}/dalai/{camelid}/models/{modelName}".format(home, camelid, modelName)
-modelExecutePath = f"{home}/dalai/{camelid}/main".format(home, camelid)
-
+parser = argparse.ArgumentParser()
+parser.add_argument('--save', type=str, required=False)
+parser.add_argument('--prompt', type=str, required=False)
+parser.add_argument('--path', type=str, required=False)
+parser.add_argument('--url', type=str, required=False)
+parser.add_argument('--model-main-path', type=str, required=False)
+parser.add_argument('--model-path', type=str, required=False)
+args = parser.parse_args()
+if args.model_main_path is None:
+    model_main_path = f"{home}/dalai/alpaca/main".format(home)
+else:
+    model_main_path = args.model_main_path
+if args.model_path is None:
+    model_path = f"{home}/dalai/alpaca/models/7B/ggml-model-q4_0.bin".format(home)
+else:
+    model_path = args.model_path
 
 def remove_matching_end(a, b):
     min_length = min(len(a), len(b))
@@ -37,7 +47,6 @@ def remove_matching_end(a, b):
 
 
 async def load_model(
-        model: str = model,
         prompt: str = "The sky is blue because",
         n_predict: int = 300,
         temp: float = 0.8,
@@ -48,9 +57,9 @@ async def load_model(
         chunk_size: int = 4,  # Define a chunk size (in bytes) for streaming the output bit by bit
 ):
     args = (
-        modelExecutePath,
+        model_main_path,
         "--model",
-        "" + model,
+        "" + model_path,
         "--prompt",
         prompt,
         "--n_predict",
@@ -140,13 +149,6 @@ class Camelid(BaseLLM, BaseModel):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--save', type=str, required=False)
-    parser.add_argument('--prompt', type=str, required=False)
-    parser.add_argument('--path', type=str, required=False)
-    parser.add_argument('--url', type=str, required=False)
-    args = parser.parse_args()
-
     # Custom llm_predictor from https://gist.github.com/lukestanley/6517823485f88a40a09979c1a19561ce_
     llm_predictor = LLMPredictor(llm=Camelid())
 

@@ -12,28 +12,30 @@ from langchain.chains.base import Chain
 
 from langchain.vectorstores import FAISS
 from langchain.docstore import InMemoryDocstore
-
+import faiss
 from pathlib import Path
 import argparse
 
-# use your own path and api key
-size = 7
-modelName = f"{size}B/ggml-model-q4_0.bin".format(size)
-camelid = "alpaca"
 home = Path.home()
-model_path = f"{home}/dalai/{camelid}/models/{modelName}".format(home, camelid, modelName)
 
-# define your own objective
-OBJECTIVE = "Plan a trip to Belize."
+parser = argparse.ArgumentParser()
+parser.add_argument('--save', type=str, required=False)
+parser.add_argument('--prompt', type=str, required=False)
+parser.add_argument('--path', type=str, required=False)
+parser.add_argument('--url', type=str, required=False)
+parser.add_argument('--model-main-path', type=str, required=False)
+parser.add_argument('--model-path', type=str, required=False)
+args = parser.parse_args()
+if args.model_path is None:
+    model_path = f"{home}/dalai/alpaca/models/7B/ggml-model-q4_0.bin".format(home)
+else:
+    model_path = args.model_path
 
 # define the local llama model
 llm = LlamaCpp(model_path=model_path, n_ctx=2048)
 
 # define the local embedding model
 embeddings_model = LlamaCppEmbeddings(model_path=model_path)
-
-# Initialize the vectorstore as empty
-import faiss
 
 # llama cpp embeddings are 4096 dimensional
 embedding_size = 4096
@@ -272,11 +274,12 @@ class BabyAGI(Chain, BaseModel):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--prompt', type=str, required=True)
+    parser.add_argument('--i', type=str, required=False)
     args = parser.parse_args()
     # Logging of LLMChains
     verbose = True
     # If None, will keep on going forever
-    max_iterations: Optional[int] = 3
+    max_iterations: args.i = None
 
     if args.prompt:
         baby_agi = BabyAGI.from_llm(
