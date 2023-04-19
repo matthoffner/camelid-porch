@@ -19,11 +19,8 @@ import argparse
 home = Path.home()
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--save', type=str, required=False)
-parser.add_argument('--prompt', type=str, required=False)
-parser.add_argument('--path', type=str, required=False)
-parser.add_argument('--url', type=str, required=False)
-parser.add_argument('--model-main-path', type=str, required=False)
+parser.add_argument('--prompt', type=str, required=True)
+parser.add_argument('--i', type=str, required=False)
 parser.add_argument('--model-path', type=str, required=False)
 args = parser.parse_args()
 if args.model_path is None:
@@ -272,10 +269,6 @@ class BabyAGI(Chain, BaseModel):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--prompt', type=str, required=True)
-    parser.add_argument('--i', type=str, required=False)
-    args = parser.parse_args()
     # Logging of LLMChains
     verbose = True
     # If None, will keep on going forever
