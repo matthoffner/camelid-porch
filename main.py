@@ -77,9 +77,8 @@ async def load_model(
         "--repeat_penalty",
         str(repeat_penalty),
         "--threads",
-        threads,
-        "--",
-        
+        str(threads),
+        "--mlock"
     )
     print(args)
     procLlama = await asyncio.create_subprocess_exec(

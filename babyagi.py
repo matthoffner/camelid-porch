@@ -29,7 +29,7 @@ else:
     model_path = args.model_path
 
 # define the local llama model
-llm = LlamaCpp(model_path=model_path, n_ctx=2048)
+llm = LlamaCpp(model_path=model_path, n_ctx=2048, use_mlock=True)
 
 # define the local embedding model
 embeddings_model = LlamaCppEmbeddings(model_path=model_path)
