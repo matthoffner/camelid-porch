@@ -1,6 +1,6 @@
 import subprocess
 from llama_index import LLMPredictor, ServiceContext, PromptHelper, SimpleDirectoryReader, SimpleWebPageReader, \
-    GPTListIndex
+    GPTListIndex, download_loader
 from pathlib import Path
 import asyncio
 from typing import List, Optional, Mapping, Any
@@ -24,6 +24,7 @@ parser.add_argument('--save', type=str, required=False)
 parser.add_argument('--prompt', type=str, required=False)
 parser.add_argument('--path', type=str, required=False)
 parser.add_argument('--url', type=str, required=False)
+parser.add_argument('--git', type=str, required=False)
 parser.add_argument('--model-main-path', type=str, required=False)
 parser.add_argument('--model-path', type=str, required=False)
 args = parser.parse_args()
@@ -149,9 +150,7 @@ class Camelid(BaseLLM, BaseModel):
 
 
 if __name__ == "__main__":
-    # Custom llm_predictor from https://gist.github.com/lukestanley/6517823485f88a40a09979c1a19561ce_
     llm_predictor = LLMPredictor(llm=Camelid())
-
     service_context = ServiceContext.from_defaults(llm_predictor=llm_predictor, prompt_helper=prompt_helper)
 
     # Load data from list of urls
@@ -159,19 +158,24 @@ if __name__ == "__main__":
         with open(args.url, "r") as urls:
             lines = urls.readlines()
             documents = SimpleWebPageReader(html_to_text=True).load_data(lines)
-            index = GPTListIndex.from_documents(documents, service_context=service_context)
 
-    # Load data from path
+    # Load git repo by path
+    if args.git:
+        GPTRepoReader = download_loader("GPTRepoReader")
+        loader = GPTRepoReader()
+        documents = loader.load_data(repo_path=args.git)
+    
+    # Load directory by path
     if args.path:
         documents = SimpleDirectoryReader(args.path).load_data()
-        index = GPTListIndex.from_documents(documents, service_context=service_context)
-
-    # Query and print response
-    if args.prompt:
-        response = index.query(args.prompt)
-        print(response)
-
-    # Save to index
+    
+    # Persist index
+    index = GPTListIndex.from_documents(documents, service_context=service_context)
     if args.save:
         index.save_to_disk(args.save)
+    
+    # Prompt index
+    if args.prompt:
+        response = index.query(args.prompt)
+        print(response)   
 
