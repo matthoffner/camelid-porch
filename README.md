@@ -64,8 +64,8 @@ python babyagi.py --prompt "Create a coffee blog"
 ### Configure path
 
 ```
---model-main-path
---model-path
+--model_main_path
+--model_path
 ```
 
 ## Related links

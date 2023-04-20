@@ -21,7 +21,7 @@ home = Path.home()
 parser = argparse.ArgumentParser()
 parser.add_argument('--prompt', type=str, required=True)
 parser.add_argument('--i', type=str, required=False)
-parser.add_argument('--model-path', type=str, required=False)
+parser.add_argument('--model_path', type=str, required=False)
 args = parser.parse_args()
 if args.model_path is None:
     model_path = f"{home}/dalai/alpaca/models/7B/ggml-model-q4_0.bin".format(home)

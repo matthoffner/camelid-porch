@@ -25,8 +25,8 @@ parser.add_argument('--prompt', type=str, required=False)
 parser.add_argument('--path', type=str, required=False)
 parser.add_argument('--url', type=str, required=False)
 parser.add_argument('--git', type=str, required=False)
-parser.add_argument('--model-main-path', type=str, required=False)
-parser.add_argument('--model-path', type=str, required=False)
+parser.add_argument('--model_main_path', type=str, required=False)
+parser.add_argument('--model_path', type=str, required=False)
 args = parser.parse_args()
 if args.model_main_path is None:
     model_main_path = f"{home}/dalai/alpaca/main".format(home)
@@ -56,6 +56,7 @@ async def load_model(
         repeat_last_n: int = 100,
         repeat_penalty: float = 1.2,
         chunk_size: int = 4,  # Define a chunk size (in bytes) for streaming the output bit by bit
+        threads: int = 8
 ):
     args = (
         model_main_path,
@@ -76,7 +77,9 @@ async def load_model(
         "--repeat_penalty",
         str(repeat_penalty),
         "--threads",
-        "8",
+        threads,
+        "--",
+        
     )
     print(args)
     procLlama = await asyncio.create_subprocess_exec(
