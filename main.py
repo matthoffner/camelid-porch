@@ -26,7 +26,7 @@ args = parser.parse_args()
 if args.model is None:
     model_path = f"{home}/{default_llm}".format(home, default_llm)
 else:
-    model_path = args.model_path
+    model_path = args.model
 
 if __name__ == "__main__":
     llm_predictor = LLMPredictor(
