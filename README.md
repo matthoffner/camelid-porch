@@ -10,15 +10,14 @@
 * BabyAGI
 * faiss
 
-## 🚜 Models supported 🚜
+## 🚜 Models 🚜
 
 * Alpaca (7B, gpt4-x-alpaca-30b-ggml-q4_1)
 * Vicuna (ggml-vicuna-7b-q4_0, ggml-vicuna-13b-1.1-q4_2)
 * Dolly (WIP) (dolly-v2-3b, dolly-v2-12b-q4_0)
+* StableLM (WIP)
 
 ## Setup
-
-### Install model (preferably ggml q4 and 1/2 total memory size) and [llama.cpp](https://github.com/ggerganov/llama.cpp) then `make` to have access to the llama.cpp binary.
 
 ### Install requirements:
 
