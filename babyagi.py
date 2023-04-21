@@ -17,19 +17,29 @@ from pathlib import Path
 import argparse
 
 home = Path.home()
-
+default_llm = "dalai/alpaca/models/7B/ggml-model-q4_0.bin"
 parser = argparse.ArgumentParser()
 parser.add_argument('--prompt', type=str, required=True)
 parser.add_argument('--i', type=str, required=False)
-parser.add_argument('--model_path', type=str, required=False)
+parser.add_argument('--model', type=str, required=False)
 args = parser.parse_args()
-if args.model_path is None:
-    model_path = f"{home}/dalai/alpaca/models/7B/ggml-model-q4_0.bin".format(home)
+if args.model is None:
+    model_path = f"{home}/{default_llm}".format(home, default_llm)
 else:
-    model_path = args.model_path
+    model_path = args.model
 
 # define the local llama model
-llm = LlamaCpp(model_path=model_path, n_ctx=2048, use_mlock=True)
+llm = LlamaCpp(model_path=model_path,
+                n_ctx=2048, 
+                use_mlock=True, 
+                top_k=10000, 
+                max_tokens=300, 
+                n_parts=-1, 
+                temperature=0.8, 
+                top_p=0.40,
+                last_n_tokens_size=100,
+                n_threads=8,
+                f16_kv=True)
 
 # define the local embedding model
 embeddings_model = LlamaCppEmbeddings(model_path=model_path)

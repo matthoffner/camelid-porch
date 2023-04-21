@@ -2,15 +2,23 @@
 
 ![](./camelid.jpeg)
 
-Python scripts for using custom LLMs with Langchain Alpaca or Llama model using [llama-index](https://github.com/jerryjliu/llama_index) and [langchain](https://github.com/hwchase17/langchain) and [BabyAGI]().
+## 📚 Libraries used 📚
+
+* Llama.cpp
+* Langchain
+* llama-cpp-python
+* BabyAGI
+* faiss
+
+## 🚜 Models supported 🚜
+
+* Alpaca (7B, gpt4-x-alpaca-30b-ggml-q4_1)
+* Vicuna (ggml-vicuna-7b-q4_0, ggml-vicuna-13b-1.1-q4_2)
+* Dolly (WIP) (dolly-v2-3b, dolly-v2-12b-q4_0)
 
 ## Setup
 
-### Install models from [Dalai](https://github.com/cocktailpeanut/dalai):
-
-```
-npx dalai alpaca install 7B
-```
+### Install model (preferably ggml q4 and 1/2 total memory size) and [llama.cpp](https://github.com/ggerganov/llama.cpp) then `make` to have access to the llama.cpp binary.
 
 ### Install requirements:
 
@@ -20,7 +28,7 @@ pip install -r requirements.txt
 
 ### Run it:
 ```
-python main.py --path ./data --prompt "Tell me if an API key required to use camelid-porch"
+python3 main.py --path ./data --prompt "Tell me if an API key required to use camelid-porch"
 ```
 
 ```
@@ -32,25 +40,25 @@ Answer: No it is not necessary
 ### Index a list of urls from a file:
 
 ```
-python main.py --urls urls.txt
+python3 main.py --urls urls.txt
 ```
 
 ### Index a list of files from a directory:
 
 ```
-python main.py --path ./data
+python3 main.py --path ./data
 ```
 
 ### Prompt after indexing:
 
 ```
-python main.py --path ./data --prompt "Where was this alpaca born?"
+python3 main.py --path ./data --prompt "Where was this alpaca born?"
 ```
 
 ### Save to index.json after indexing:
 
 ```
-python main.py --save index.json
+python3 main.py --save index.json
 ```
 
 
@@ -58,14 +66,13 @@ python main.py --save index.json
 From https://github.com/ai8hyf/babyagi/commit/6fcd528a92c80846dbb351f2b7babdd50c38709d
 
 ```
-python babyagi.py --prompt "Create a coffee blog"
+python3 babyagi.py --prompt "Create a coffee blog"
 ```
 
-### Configure path
+### Configure model
 
 ```
---model_main_path
---model_path
+--model
 ```
 
 ## Related links

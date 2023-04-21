@@ -1,12 +1,7 @@
-import subprocess
+from langchain.llms import LlamaCpp
 from llama_index import LLMPredictor, ServiceContext, PromptHelper, SimpleDirectoryReader, SimpleWebPageReader, \
     GPTListIndex, download_loader
 from pathlib import Path
-import asyncio
-from typing import List, Optional, Mapping, Any
-from langchain.llms.base import Generation, LLMResult, BaseLLM
-from pydantic import BaseModel
-import threading
 import argparse
 
 # define prompt helper
@@ -20,139 +15,35 @@ prompt_helper = PromptHelper(max_input_size, num_output, max_chunk_overlap)
 
 home = Path.home()
 parser = argparse.ArgumentParser()
+default_llm = "dalai/alpaca/models/7B/ggml-model-q4_0.bin"
 parser.add_argument('--save', type=str, required=False)
 parser.add_argument('--prompt', type=str, required=False)
 parser.add_argument('--path', type=str, required=False)
 parser.add_argument('--url', type=str, required=False)
 parser.add_argument('--git', type=str, required=False)
-parser.add_argument('--model_main_path', type=str, required=False)
-parser.add_argument('--model_path', type=str, required=False)
+parser.add_argument('--model', type=str, required=False)
 args = parser.parse_args()
-if args.model_main_path is None:
-    model_main_path = f"{home}/dalai/alpaca/main".format(home)
-else:
-    model_main_path = args.model_main_path
-if args.model_path is None:
-    model_path = f"{home}/dalai/alpaca/models/7B/ggml-model-q4_0.bin".format(home)
+if args.model is None:
+    model_path = f"{home}/{default_llm}".format(home, default_llm)
 else:
     model_path = args.model_path
 
-def remove_matching_end(a, b):
-    min_length = min(len(a), len(b))
-
-    for i in range(min_length, 0, -1):
-        if a[-i:] == b[:i]:
-            return b[i:]
-
-    return b
-
-
-async def load_model(
-        prompt: str = "The sky is blue because",
-        n_predict: int = 300,
-        temp: float = 0.8,
-        top_k: int = 10000,
-        top_p: float = 0.40,
-        repeat_last_n: int = 100,
-        repeat_penalty: float = 1.2,
-        chunk_size: int = 4,  # Define a chunk size (in bytes) for streaming the output bit by bit
-        threads: int = 8
-):
-    args = (
-        model_main_path,
-        "--model",
-        "" + model_path,
-        "--prompt",
-        prompt,
-        "--n_predict",
-        str(n_predict),
-        "--temp",
-        str(temp),
-        "--top_k",
-        str(top_k),
-        "--top_p",
-        str(top_p),
-        "--repeat_last_n",
-        str(repeat_last_n),
-        "--repeat_penalty",
-        str(repeat_penalty),
-        "--threads",
-        str(threads),
-        "--mlock"
-    )
-    print(args)
-    procLlama = await asyncio.create_subprocess_exec(
-        *args, stdout=subprocess.PIPE, stderr=subprocess.PIPE
-    )
-
-    answer = ""
-
-    while True:
-        chunk = await procLlama.stdout.read(chunk_size)
-        if not chunk:
-            return_code = await procLlama.wait()
-
-            if return_code != 0:
-                error_output = await procLlama.stderr.read()
-                raise ValueError(error_output.decode("utf-8"))
-            else:
-                return
-
-        chunk = chunk.decode("utf-8")
-        print(chunk, end="", flush=True)
-        answer += chunk
-
-        if prompt in answer:
-            yield remove_matching_end(prompt, chunk)
-
-
-class Camelid(BaseLLM, BaseModel):
-    async def _agenerate(
-        self, prompts: List[str], stop: Optional[List[str]] = None
-    ) -> LLMResult:
-        response = ""
-        async for token in load_model(prompt=prompts[0]):
-            response += token
-            self.callback_manager.on_llm_new_token(token, verbose=True)
-
-        generations = [[Generation(text=response)]]
-        return LLMResult(generations=generations)
-
-    def _generate(
-        self, prompts: List[str], stop: Optional[List[str]] = None
-    ) -> LLMResult:
-        result = None
-
-        def run_coroutine_in_new_loop():
-            nonlocal result
-            new_loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(new_loop)
-            try:
-                result = new_loop.run_until_complete(self._agenerate(prompts, stop))
-            finally:
-                new_loop.close()
-
-        result_thread = threading.Thread(target=run_coroutine_in_new_loop)
-        result_thread.start()
-        result_thread.join()
-
-        return result
-
-    def _call(self, prompt: str, stop: Optional[List[str]] = None) -> str:
-        result = self._generate([prompt], stop)
-        return result.generations[0][0].text
-
-    @property
-    def _identifying_params(self) -> Mapping[str, Any]:
-        return {}
-
-    @property
-    def _llm_type(self) -> str:
-        return "llama"
-
-
 if __name__ == "__main__":
-    llm_predictor = LLMPredictor(llm=Camelid())
+    llm_predictor = LLMPredictor(
+        llm=LlamaCpp(
+                model_path=model_path, 
+                n_ctx=2048, 
+                use_mlock=True, 
+                top_k=10000, 
+                max_tokens=300, 
+                n_parts=-1, 
+                temperature=0.8, 
+                top_p=0.40,
+                last_n_tokens_size=100,
+                n_threads=8,
+                f16_kv=True
+            )
+        )
     service_context = ServiceContext.from_defaults(llm_predictor=llm_predictor, prompt_helper=prompt_helper)
 
     # Load data from list of urls
