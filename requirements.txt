@@ -1,8 +1,9 @@
 transformers~=4.27.4
-llama-index
+llama-index==0.5.27
 asyncio
 html2text
 pydantic
 langchain
 faiss-cpu
 llama-cpp-python
+lark
